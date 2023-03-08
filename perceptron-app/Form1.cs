@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace perceptron_app
@@ -8,560 +9,458 @@ namespace perceptron_app
     public partial class Form1 : Form
     {
         int N = 35;
-        int[] letter, desiredOutput, a, b, c, d, E, f, g, h, I, j, k, l, m, n, o, p, q, u, r, s, t, e, v, w, x, y, z;
-
-        List<Button> randomButtons;
-        List<Button> trainedButtons;
-        double[] weights;
-        int bias;
+        int[] inputLetter, actualOutput, targetOutput, a, b, c, d, E, f, g, h, I, j, k, l, m, n, o, p, q, u, r, s, t, e, v, w, x, y, z;
+        List<int[]> letters;
+        List<PictureBox> inputPattern;
+        List<Label> outputWeights;
+        double learningRate, bias;
+        double[] weight;
+        int epoch;
+        bool isTrained;
 
         public Form1()
         {
             InitializeComponent();
-            letter = new int[N];
-            desiredOutput = new int[N];
-            a = new int[35] { 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1 };      //A
-            b = new int[35] { 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0 };      //B
-            c = new int[35] { 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };      //C
-            d = new int[35] { 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0 };      //D 
-            E = new int[35] { 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1 };      //E
-            f = new int[35] { 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0 };      //F 
-            g = new int[35] { 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };      //G  
-            h = new int[35] { 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1 };      //H 
-            I = new int[35] { 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1 };      //I
-            j = new int[35] { 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0 };      //J
-            k = new int[35] { 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1 };      //K 
-            l = new int[35] { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1 };      //L
-            m = new int[35] { 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1 };      //M
-            n = new int[35] { 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1 };      //N 
-            o = new int[35] { 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };      //O
-            p = new int[35] { 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0 };      //P
-            q = new int[35] { 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1 };      //Q
-            r = new int[35] { 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1 };      //R
-            s = new int[35] { 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };      //S
-            t = new int[35] { 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0 };      //T
-            u = new int[35] { 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0 };      //U
-            v = new int[35] { 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0 };      //V
-            w = new int[35] { 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1 };      //W
-            x = new int[35] { 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1 };      //X
-            y = new int[35] { 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0 };      //Y
-            z = new int[35] { 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1 };      //Z
-            weights = new double[N];
-            bias = 0;
-            randomButtons = new List<Button> { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10,
-                                btn11, btn12, btn13, btn14, btn15, btn16, btn17, btn18, btn19, btn20,
-                                btn21, btn22, btn23, btn24, btn25, btn26, btn27, btn28, btn29, btn30,
-                                btn31, btn32, btn33, btn34, btn35 };
 
-            trainedButtons = new List<Button> { btnr1, btnr2, btnr3, btnr4, btnr5, btnr6, btnr7, btnr8, btnr9, btnr10,
-                                btnr11, btnr12, btnr13, btnr14, btnr15, btnr16, btnr17, btnr18, btnr19, btnr20,
-                                btnr21, btnr22, btnr23, btnr24, btnr25, btnr26, btnr27, btnr28, btnr29, btnr30,
-                                btnr31, btnr32, btnr33, btnr34, btnr35 };
+            /*******************************************************************************************
+                Capital letter patterns with its given 7x5 binary numbers and the vowel/consonant indicator
+                Last index is the indicatior/desired output -- VOWEL = 1  CONSONANT = -1 
+            ********************************************************************************************/
+            a = new int[36] { -1, -1, 1, -1, -1, -1, 1, -1, 1, -1, 1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1,        1 };      //A
+            b = new int[36] { 1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, -1,           -1 };      //B
+            c = new int[36] { -1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, 1, -1, 1, 1, 1, -1,    -1 };      //C
+            d = new int[36] { 1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, -1,         -1 };      //D 
+            E = new int[36] { 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1,           1 };      //E
+            f = new int[36] { 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1,      -1 };      //F 
+            g = new int[36] { -1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, 1, 1, 1, 1, -1, -1, -1, 1, -1, 1, 1, 1, -1,       -1 };      //G  
+            h = new int[36] { 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1,        -1 };      //H 
+            I = new int[36] { 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, 1, 1, 1,       1 };      //I
+            j = new int[36] { 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, -1, 1, -1, -1, -1, 1, -1, -1, -1,    -1 };      //J
+            k = new int[36] { 1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1, -1, 1, -1, -1, 1, 1, -1, -1, -1, 1, -1, 1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, -1, 1,     -1 };      //K 
+            l = new int[36] { 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1,  -1 };      //L
+            m = new int[36] { 1, -1, -1, -1, 1, 1, 1, -1, 1, 1, 1, -1, 1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1,        -1 };      //M
+            n = new int[36] { 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1, 1, -1, -1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1,        -1 };      //N 
+            o = new int[36] { -1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, -1, 1, 1, 1, -1,        1 };      //O
+            p = new int[36] { 1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1,      -1 };      //P
+            q = new int[36] { -1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, -1, 1, 1, 1, -1, -1, -1, 1, -1, -1, -1, -1, -1, 1, 1,      -1 };      //Q
+            r = new int[36] { 1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, -1, 1,         -1 };      //R
+            s = new int[36] { -1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, -1, -1, -1, 1, -1, 1, 1, 1, -1,      -1 };      //S
+            t = new int[36] { 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1,  -1 };      //T
+            u = new int[36] { 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, -1, 1, 1, 1, -1,       1 };      //U
+            v = new int[36] { 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, -1, 1, -1, 1, -1, -1, -1, 1, -1, -1,    -1 };      //V
+            w = new int[36] { 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, 1, -1, 1, 1, 1, -1, 1, 1, 1, -1, -1, -1, 1,        -1 };      //W
+            x = new int[36] { 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, -1, 1, -1, 1, -1, -1, -1, 1, -1, -1, -1, 1, -1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1,    -1 };      //X
+            y = new int[36] { 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, -1, 1, -1, 1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1 };      //Y
+            z = new int[36] { 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1, -1, 1, -1, -1, -1, 1, -1, -1, -1, 1, -1, -1, -1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1,      -1 };      //Z
+
+            /********** Initial values for weights and bias **********/
+            weight = new double[35] { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
+            bias = -0.5200000000000006;
+
+            learningRate = 0.01;
+
+            /**********************************************************
+             Target output and Actual output last index of every letter 
+                            VOWEL/CONSONANT indicator 
+            ***********************************************************/
+            targetOutput = new int[26] { a[35], b[35], c[35], d[35], E[35], f[35], g[35], h[35], I[35], j[35], k[35], l[35], m[35], n[35], o[35], p[35], q[35], r[35], s[35], t[35], u[35], v[35], w[35], x[35], y[35], z[35] };
+            actualOutput = new int[26];
+           
+
+            /**************************************************************
+            This will store all the letters with equivalent binary patterns
+                    This will be iterated to train the model
+             **************************************************************/
+            letters = new List<int[]> { a, b, c, d, E, f, g, h, I, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z };
+
+
+            /****** The inputted letter with its equivalent pattern ******/
+            inputLetter = new int[35];
+            inputPattern = new List<PictureBox> { pictureBox1, pictureBox2, pictureBox3, pictureBox4, pictureBox5,
+                                                   pictureBox10, pictureBox9, pictureBox8, pictureBox7, pictureBox6,
+                                                   pictureBox15, pictureBox14, pictureBox13, pictureBox12, pictureBox11,
+                                                   pictureBox20, pictureBox19, pictureBox18, pictureBox17, pictureBox16,
+                                                   pictureBox25, pictureBox24, pictureBox23, pictureBox22, pictureBox21,
+                                                   pictureBox30, pictureBox29, pictureBox28, pictureBox27, pictureBox26,
+                                                   pictureBox35, pictureBox34, pictureBox33, pictureBox32, pictureBox31
+                                                };
+
+            /****** This will display the final weights ******/
+            outputWeights = new List<Label> { w1, w2, w3, w4, w5,
+                                                w6, w7, w8, w9, w10,
+                                                w11, w12, w13, w14, w15,
+                                                w16, w17, w18, w19, w20,
+                                                w21, w22, w23, w24, w25,
+                                                w26, w27, w28, w29, w30,
+                                                w31, w32, w33, w34, w35
+                                            };
+
+            epoch = 0;
+            isTrained = false;
         }
 
+        /// <summary>
+        /// Trains the model through the perceptron algorithm
+        /// </summary>
         private void buttonTrain_Click(object sender, EventArgs e)
         {
-            if (letterTextBox.Text != "")
+            while (!actualOutput.SequenceEqual(targetOutput) && epoch <= 80)
             {
-                SetTrainedButtonsColor();
-            }
-        }
+                epoch++;
+                trainTextBox.AppendText("Epoch: " + epoch.ToString() + Environment.NewLine + Environment.NewLine);
+                int actualOutputIndex = 0; 
 
-        private void btnRandomize_Click(object sender, EventArgs e)
-        {
-            if (letterTextBox.Text != "")
-            {
-                SetLetter(letterTextBox.Text[0]);
-
-                Random rand = new Random();
-
-                for (int i = 0; i < N; i++)
+                foreach (int[] letter in letters)
                 {
-                    int index = rand.Next(N); // generate a random index between 0 and N-1
-                    int temp = letter[i];
-                    letter[i] = letter[index];
-                    letter[index] = temp;
-                }
+                    // y = weight * input + bias
+                    double output = Enumerable.Range(0, letter.Length-1).Sum(j => letter[j] * weight[j]) + bias;
+                    
+                    // Used hard-limitting function to get actual output
+                    actualOutput[actualOutputIndex] = Activation(output);
 
-                SetRandomButtonsColor();
+                    double error = letter[35] - actualOutput[actualOutputIndex];
+                    UpdateValues(letter, error);
+
+                    actualOutputIndex++;
+                }
             }
+
+            SetLabelWeights();
+            trainTextBox.AppendText("Total epochs: " + epoch.ToString());
+            isTrained = true;
         }
 
-        private void btnReset_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Updates the weights and bias
+        /// </summary>
+        /// <param name="currentLetter">Pattern of a lettern to be used for updating values</param>
+        /// <param name="error">Error produced where error = targetOutput - actualOutput of a letter</param>
+        private void UpdateValues(int[] currentLetter, double error)
         {
             for (int i = 0; i < N; i++)
             {
-                letter[i] = 0;
-                randomButtons[i].BackColor = SystemColors.ButtonFace;
-                randomButtons[i].ForeColor = default;
-                randomButtons[i].UseVisualStyleBackColor = true;
+                weight[i] = weight[i] + learningRate * error * currentLetter[i];
+                bias = bias + learningRate * error;
 
-                trainedButtons[i].BackColor = SystemColors.ButtonFace;
-                trainedButtons[i].ForeColor = default;
-                trainedButtons[i].UseVisualStyleBackColor = true;
+                trainTextBox.AppendText("Weight" + i.ToString() + ": " + weight[i].ToString() + Environment.NewLine +
+                                            "bias: " + bias.ToString() + Environment.NewLine + Environment.NewLine);
             }
-
-            letterTextBox.Clear();
-            trainTextBox.Clear();
         }
 
-        public void SetLetter(char let)
+        /// <summary>
+        /// The Hard-limitting function
+        /// </summary>
+        /// <param name="x">the result from y = weight * input + bias</param>
+        /// <returns>1 if x > 0, -1 if not</returns>
+        private int Activation(double x)
         {
-            //letter will store the inputted letter with its given 7x5 binary numbers and the vowel/consonant indicator
-            //LAST BIT INDICATOR -- VOWEL = 1  CONSONANT = -1 
+            return x > 0 ? 1 : -1;
+        }
+
+        /// <summary>
+        /// Determines if a letter is a vowel or a consonant through using the trained model
+        /// </summary>
+        private void determineBtn_Click(object sender, EventArgs e)
+        {
+            if (isTrained)
+            {
+                if (letterTextBox.Text != "")
+                {
+                    if (SetIsLetter(letterTextBox.Text[0]))
+                    {
+                        SetInputPattern();
+
+                        // y = weight * input + bias
+                        double output = Activation(Enumerable.Range(0, inputLetter.Length).Sum(j => inputLetter[j] * weight[j]) + bias);
+                        outputTextBox.Text = output == 1 ? $"Letter {letterTextBox.Text[0]} is a vowel" :
+                                                           $"Letter {letterTextBox.Text[0]} is a consonant";
+                    }
+                    else
+                    {
+                        outputTextBox.Text = "Your input is not a letter";
+                    }
+                }
+                else
+                {
+                    outputTextBox.Text = "Input a letter";
+                }
+            }
+            else
+            {
+                outputTextBox.Text = "Train the model first";
+            }
+        }
+   
+        /// <summary>
+        /// Resets everything, must do everything again
+        /// </summary>
+        private void btnReset_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < 26; i++)
+            {
+                actualOutput[i] = 0;
+            }
+
+            for (int i = 0; i < N; i++)
+            {
+                weight[i] = 0.5;
+                inputPattern[i].BackColor = Color.White;
+                outputWeights[i].Text = "";
+            }
+
+            epoch = 0;
+            bias = 0;
+            letterTextBox.Clear();
+            trainTextBox.Clear();
+            outputTextBox.Clear();
+        }
+
+        /// <summary>
+        /// Sets the weight labels the final weight values
+        /// </summary>
+        private void SetLabelWeights()
+        {
+            for(int i = 0; i < N; i++)
+            {
+                outputWeights[i].Text = weight[i].ToString();
+            }
+        }
+
+        /// <summary>
+        /// Sets the pattern of the inputted letter
+        /// </summary>
+        /// <param name="let">Character letter input</param>
+        /// <returns>True if input is a letter otherwise fales</returns>
+        public bool SetIsLetter(char let)
+        {
             if (let == 'A' || let == 'a')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = a[i];
-                    desiredOutput[i] = a[i];
+                    inputLetter[i] = a[i];
                 }
+                return true;
             }
             else if (let == 'B' || let == 'b')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = b[i];
-                    desiredOutput[i] = b[i];
+                    inputLetter[i] = b[i];
                 }
+                return true;
             }
             else if (let == 'C' || let == 'c')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = c[i];
-                    desiredOutput[i] = c[i];
+                    inputLetter[i] = c[i];
                 }
+                return true;
             }
             else if (let == 'D' || let == 'd')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = d[i];
-                    desiredOutput[i] = d[i];
+                    inputLetter[i] = d[i];
                 }
+                return true;
             }
             else if (let == 'E' || let == 'e')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = E[i];
-                    desiredOutput[i] = E[i];
+                    inputLetter[i] = E[i];
                 }
+                return true;
             }
             else if (let == 'F' || let == 'f')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = f[i];
-                    desiredOutput[i] = f[i];
+                    inputLetter[i] = f[i];
                 }
+                return true;
             }
             else if (let == 'G' || let == 'g')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = g[i];
-                    desiredOutput[i] = g[i];
+                    inputLetter[i] = g[i];
                 }
+                return true;
             }
             else if (let == 'H' || let == 'h')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = h[i];
-                    desiredOutput[i] = h[i];
+                    inputLetter[i] = h[i];
                 }
+                return true;
             }
             else if (let == 'I' || let == 'i')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = I[i];
-                    desiredOutput[i] = I[i];
+                    inputLetter[i] = I[i];
                 }
+                return true;
             }
             else if (let == 'J' || let == 'j')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = j[i];
-                    desiredOutput[i] = j[i];
+                    inputLetter[i] = j[i];
                 }
+                return true;
             }
             else if (let == 'K' || let == 'k')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = k[i];
-                    desiredOutput[i] = k[i];
+                    inputLetter[i] = k[i];
                 }
+                return true;
             }
             else if (let == 'L' || let == 'l')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = l[i];
-                    desiredOutput[i] = l[i];
+                    inputLetter[i] = l[i];
                 }
+                return true;
             }
             else if (let == 'M' || let == 'm')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = m[i];
-                    desiredOutput[i] = m[i];
+                    inputLetter[i] = m[i];
                 }
+                return true;
             }
             else if (let == 'N' || let == 'n')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = n[i];
-                    desiredOutput[i] = n[i];
+                    inputLetter[i] = n[i];
                 }
+                return true;
             }
             else if (let == 'O' || let == 'o')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = o[i];
-                    desiredOutput[i] = o[i];
+                    inputLetter[i] = o[i];
                 }
+                return true;
             }
             else if (let == 'P' || let == 'p')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = p[i];
-                    desiredOutput[i] = p[i];
+                    inputLetter[i] = p[i];
                 }
+                return true;
             }
             else if (let == 'Q' || let == 'q')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = q[i];
-                    desiredOutput[i] = q[i];
+                    inputLetter[i] = q[i];
                 }
+                return true;
             }
             else if (let == 'R' || let == 'r')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = r[i];
-                    desiredOutput[i] = r[i];
+                    inputLetter[i] = r[i];
                 }
+                    return true;
             }
             else if (let == 'S' || let == 's')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = s[i];
-                    desiredOutput[i] = s[i];
+                    inputLetter[i] = s[i];
                 }
+                return true;
             }
             else if (let == 'T' || let == 't')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = t[i];
-                    desiredOutput[i] = t[i];
+                    inputLetter[i] = t[i];
                 }
+                return true;
             }
             else if (let == 'U' || let == 'u')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = u[i];
-                    desiredOutput[i] = u[i];
+                    inputLetter[i] = u[i];
                 }
+                return true;
             }
             else if (let == 'V' || let == 'v')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = v[i];
-                    desiredOutput[i] = v[i];
+                    inputLetter[i] = v[i];
                 }
+                return true;
             }
             else if (let == 'W' || let == 'w')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = w[i];
-                    desiredOutput[i] = w[i];
+                    inputLetter[i] = w[i];
                 }
+                return true;
             }
             else if (let == 'X' || let == 'x')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = x[i];
-                    desiredOutput[i] = x[i];
+                    inputLetter[i] = x[i];
                 }
+                return true;
             }
             else if (let == 'Y' || let == 'y')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = y[i];
-                    desiredOutput[i] = y[i];
+                    inputLetter[i] = y[i];
                 }
+                return true;
             }
             else if (let == 'Z' || let == 'z')
             {
                 for (int i = 0; i < N; i++)
                 {
-                    letter[i] = z[i];
-                    desiredOutput[i] = z[i];
+                    inputLetter[i] = z[i];
                 }
+                return true;
             }
+            
+            return false;
         }
 
-        public void SetRandomButtonsColor()
-        {
+        /// <summary>
+        /// Sets the picture boxes with the equivalent pattern of the inputted letter
+        /// </summary>
+        public void SetInputPattern()
+        {       
             for (int i = 0; i < N; i++)
             {
-                if (letter[i] == 1)
+                if (inputLetter[i] == 1)
                 {
-                    randomButtons[i].BackColor = Color.LightGreen;
+                    inputPattern[i].BackColor = Color.LightGreen;
                 }
                 else
                 {
-                    randomButtons[i].BackColor = SystemColors.ButtonFace;
-                    randomButtons[i].ForeColor = default;
-                    randomButtons[i].UseVisualStyleBackColor = true;
+                    inputPattern[i].BackColor = Color.White;
                 }
             }
         }
-
-        public void SetTrainedButtonsColor()
-        {
-            for (int i = 0; i < N; i++)
-            {
-                if (letter[i] == 1)
-                {
-                    trainedButtons[i].BackColor = Color.LightGreen;
-                }
-                else
-                {
-                    trainedButtons[i].BackColor = SystemColors.ButtonFace;
-                    trainedButtons[i].ForeColor = default;
-                    trainedButtons[i].UseVisualStyleBackColor = true;
-                }
-            }
-        }
-
-        private void btn1_Click(object sender, EventArgs e)
-        {
-            letter[0] = 1;
-            btn1.BackColor = Color.LightGreen;
-        }
-
-        private void btn2_Click(object sender, EventArgs e)
-        {
-            letter[1] = 1;
-            btn2.BackColor = Color.LightGreen;
-        }
-
-        private void btn3_Click(object sender, EventArgs e)
-        {
-            letter[2] = 1;
-            btn3.BackColor = Color.LightGreen;
-        }
-
-        private void btn4_Click(object sender, EventArgs e)
-        {
-            letter[3] = 1;
-            btn4.BackColor = Color.LightGreen;
-        }
-
-        private void btn5_Click(object sender, EventArgs e)
-        {
-            letter[4] = 1;
-            btn5.BackColor = Color.LightGreen;
-        }
-
-        private void btn6_Click(object sender, EventArgs e)
-        {
-            letter[5] = 1;
-            btn6.BackColor = Color.LightGreen;
-        }
-
-        private void btn7_Click(object sender, EventArgs e)
-        {
-            letter[6] = 1;
-            btn7.BackColor = Color.LightGreen;
-        }
-        private void btn8_Click(object sender, EventArgs e)
-        {
-            letter[7] = 1;
-            btn8.BackColor = Color.LightGreen;
-        }
-
-        private void btn9_Click(object sender, EventArgs e)
-        {
-            letter[8] = 1;
-            btn9.BackColor = Color.LightGreen;
-        }
-
-        private void btn10_Click(object sender, EventArgs e)
-        {
-            letter[9] = 1;
-            btn10.BackColor = Color.LightGreen;
-        }
-
-        private void btn11_Click(object sender, EventArgs e)
-        {
-            letter[10] = 1;
-            btn11.BackColor = Color.LightGreen;
-        }
-
-        private void btn12_Click(object sender, EventArgs e)
-        {
-            letter[11] = 1;
-            btn12.BackColor = Color.LightGreen;
-        }
-
-        private void btn13_Click(object sender, EventArgs e)
-        {
-            letter[12] = 1;
-            btn13.BackColor = Color.LightGreen;
-        }
-
-        private void btn14_Click(object sender, EventArgs e)
-        {
-            letter[13] = 1;
-            btn14.BackColor = Color.LightGreen;
-
-        }
-
-        private void btn15_Click(object sender, EventArgs e)
-        {
-            letter[14] = 1;
-            btn15.BackColor = Color.LightGreen;
-        }
-
-        private void btn16_Click(object sender, EventArgs e)
-        {
-            letter[15] = 1;
-            btn16.BackColor = Color.LightGreen;
-        }
-
-        private void btn17_Click(object sender, EventArgs e)
-        {
-            letter[16] = 1;
-            btn17.BackColor = Color.LightGreen;
-        }
-
-        private void btn18_Click(object sender, EventArgs e)
-        {
-            letter[17] = 1;
-            btn18.BackColor = Color.LightGreen;
-        }
-
-        private void btn19_Click(object sender, EventArgs e)
-        {
-            letter[18] = 1;
-            btn18.BackColor = Color.LightGreen;
-        }
-
-        private void btn20_Click(object sender, EventArgs e)
-        {
-            letter[19] = 1;
-            btn20.BackColor = Color.LightGreen;
-        }
-
-        private void btn21_Click(object sender, EventArgs e)
-        {
-            letter[20] = 1;
-            btn21.BackColor = Color.LightGreen;
-        }
-
-        private void btn22_Click(object sender, EventArgs e)
-        {
-            letter[21] = 1;
-            btn22.BackColor = Color.LightGreen;
-        }
-
-        private void btn23_Click(object sender, EventArgs e)
-        {
-            letter[22] = 1;
-            btn23.BackColor = Color.LightGreen;
-        }
-
-        private void btn24_Click(object sender, EventArgs e)
-        {
-            letter[23] = 1;
-            btn24.BackColor = Color.LightGreen;
-        }
-
-        private void btn25_Click(object sender, EventArgs e)
-        {
-            letter[24] = 1;
-            btn25.BackColor = Color.LightGreen;
-        }
-
-        private void btn26_Click(object sender, EventArgs e)
-        {
-            letter[25] = 1;
-            btn26.BackColor = Color.LightGreen;
-        }
-
-        private void btn27_Click(object sender, EventArgs e)
-        {
-            letter[26] = 1;
-            btn27.BackColor = Color.LightGreen;
-        }
-
-        private void btn28_Click(object sender, EventArgs e)
-        {
-            letter[27] = 1;
-            btn28.BackColor = Color.LightGreen;
-        }
-
-        private void btn29_Click(object sender, EventArgs e)
-        {
-            letter[28] = 1;
-            btn29.BackColor = Color.LightGreen;
-        }
-
-        private void btn30_Click(object sender, EventArgs e)
-        {
-            letter[29] = 1;
-            btn30.BackColor = Color.LightGreen;
-        }
-
-        private void btn31_Click(object sender, EventArgs e)
-        {
-            letter[30] = 1;
-            btn31.BackColor = Color.LightGreen;
-        }
-
-        private void btn32_Click(object sender, EventArgs e)
-        {
-            letter[31] = 1;
-            btn32.BackColor = Color.LightGreen;
-        }
-
-        private void btn33_Click(object sender, EventArgs e)
-        {
-            letter[32] = 1;
-            btn33.BackColor = Color.LightGreen;
-        }
-
-        private void btn34_Click(object sender, EventArgs e)
-        {
-            letter[33] = 1;
-            btn34.BackColor = Color.LightGreen;
-        }
-
-        private void btn35_Click(object sender, EventArgs e)
-        {
-            letter[34] = 1;
-            btn35.BackColor = Color.LightGreen;
-        }
-
     }
 }
