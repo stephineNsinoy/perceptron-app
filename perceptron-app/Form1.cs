@@ -24,7 +24,7 @@ namespace perceptron_app
 
             /*******************************************************************************************
                 Capital letter patterns with its given 7x5 binary numbers and the vowel/consonant indicator
-                      Last index is the indicatior/desired output -- VOWEL = 1  CONSONANT = -1 
+                      Last index is the indicator/desired output -- VOWEL = 1  CONSONANT = -1 
             ********************************************************************************************/
             a = new int[36] { -1, -1, 1, -1, -1, -1, 1, -1, 1, -1, 1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1,        1 };      //A
             b = new int[36] { 1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, 1, 1, -1,           -1 };      //B
