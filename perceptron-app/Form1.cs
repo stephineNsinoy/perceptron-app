@@ -209,7 +209,7 @@ namespace perceptron_app
             }
 
             epoch = 0;
-            bias = 0;
+            bias = -0.5200000000000006;
             letterTextBox.Clear();
             trainTextBox.Clear();
             outputTextBox.Clear();
